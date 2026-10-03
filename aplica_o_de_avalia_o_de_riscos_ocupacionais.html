@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação de Riscos Ocupacionais K-SST</title>
+    <!-- CSS / Tailwind & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Bibliotecas de Exportação (Excel, PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        .risk-card { transition: all 0.2s ease-in-out; }
+        .risk-card:hover { transform: translateY(-2px); }
+        .badge-danger { background-color: #fee2e2; color: #991b1b; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-info { background-color: #e0e7ff; color: #3730a3; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+    <!-- Cabeçalho -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-2xl text-amber-500"></i>
+                <h1 class="text-xl font-bold tracking-wide">K-SST | Avaliação de Riscos Ocupacionais</h1>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-sm font-medium flex items-center gap-2 transition">
+                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
+                </button>
+                <button onclick="exportToPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded text-sm font-medium flex items-center gap-2 transition">
+                    <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        
+        <!-- Formulário de Informações Gerais -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-building text-slate-500"></i> Dados da Empresa & Setor
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Razão Social / Empresa</label>
+                    <input type="text" id="empresa" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Nome da empresa">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Setor / Local</label>
+                    <input type="text" id="setor" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ex: Produção, Manutenção">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Cargo / Função</label>
+                    <input type="text" id="cargo" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Ex: Operador de Máquinas">
+                </div>
+            </div>
+        </section>
+
+        <!-- Filtros e Seleção de Riscos -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-slate-500"></i> Identificação de Perigos e Riscos
+                    </h2>
+                    <p class="text-sm text-slate-500">Selecione e classifique os riscos presentes no ambiente de trabalho.</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <select id="filterCategory" onchange="filterRisks()" class="border rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none w-full md:w-auto">
+                        <option value="todos">Todas as Categorias</option>
+                        <option value="Físicos">Físicos</option>
+                        <option value="Químicos">Químicos</option>
+                        <option value="Biológicos">Biológicos</option>
+                        <option value="Ergonômicos">Ergonômicos</option>
+                        <option value="Acidentes">Acidentes</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabela de Seleção -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                        <tr>
+                            <th class="p-3 rounded-l-lg">Categoria</th>
+                            <th class="p-3">Agente / Perigo</th>
+                            <th class="p-3">Probabilidade (1-5)</th>
+                            <th class="p-3">Severidade (1-5)</th>
+                            <th class="p-3">Nível de Risco</th>
+                            <th class="p-3 rounded-r-lg text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riskTableBody" class="divide-y divide-slate-200">
+                        <!-- Gerado via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Resumo da Avaliação -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-slate-500"></i> Resumo dos Riscos Avaliados
+            </h2>
+            <div id="selectedRisksSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-slate-400 text-sm col-span-full italic">Nenhum risco avaliado até ao momento.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Lógica em JavaScript -->
+    <script>
+        // Base de Dados de Riscos Completa e Estruturada
+        const baseDeRiscos = [
+            { id: "r1", cat: "Físicos", agente: "Ruído Contínuo ou Intermitente", prob: 1, sev: 1 },
+            { id: "r2", cat: "Físicos", agente: "Vibração de Mãos e Braços", prob: 1, sev: 1 },
+            { id: "r3", cat: "Físicos", agente: "Calor Excessivo / Sobrecarga Térmica", prob: 1, sev: 1 },
+            { id: "r4", cat: "Químicos", agente: "Poeiras Minerais (Sílica, Asbesto)", prob: 1, sev: 1 },
+            { id: "r5", cat: "Químicos", agente: "Vapores Orgânicos / Solventes", prob: 1, sev: 1 },
+            { id: "r6", cat: "Biológicos", agente: "Vírus, Bactérias e Fungos", prob: 1, sev: 1 },
+            { id: "r7", cat: "Ergonômicos", agente: "Levantamento e Transporte Manual de Cargas", prob: 1, sev: 1 },
+            { id: "r8", cat: "Ergonômicos", agente: "Postura Inadequada / Prolongada", prob: 1, sev: 1 },
+            { id: "r9", cat: "Acidentes", agente: "Trabalho em Altura (> 2 metros)", prob: 1, sev: 1 },
+            { id: "r10", cat: "Acidentes", agente: "Risco de Choque Elétrico", prob: 1, sev: 1 },
+            { id: "r11", cat: "Acidentes", agente: "Prensa e Equipamentos Sem Proteção", prob: 1, sev: 1 }
+        ];
+
+        let avaliacoes = {};
+
+        // Inicializar aplicação
+        document.addEventListener("DOMContentLoaded", () => {
+            renderTable(baseDeRiscos);
+        });
+
+        // Renderizar Tabela de Riscos
+        function renderTable(riscos) {
+            const tbody = document.getElementById("riskTableBody");
+            tbody.innerHTML = "";
+
+            riscos.forEach(r => {
+                const aval = avaliacoes[r.id] || { prob: 1, sev: 1, ativo: false };
+                const nivel = aval.prob * aval.sev;
+                const badgeClass = getNivelBadge(nivel);
+
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-slate-700">${r.cat}</td>
+                    <td class="p-3 text-slate-800">${r.agente}</td>
+                    <td class="p-3">
+                        <select onchange="updateRisk('${r.id}', 'prob', this.value)" class="border rounded p-1 text-sm bg-white">
+                            ${[1,2,3,4,5].map(v => `<option value="${v}" ${aval.prob == v ? 'selected':''}>${v}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <select onchange="updateRisk('${r.id}', 'sev', this.value)" class="border rounded p-1 text-sm bg-white">
+                            ${[1,2,3,4,5].map(v => `<option value="${v}" ${aval.sev == v ? 'selected':''}>${v}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-xs font-semibold rounded ${badgeClass}">
+                            Nível ${nivel} (${getNivelTexto(nivel)})
+                        </span>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="toggleRisk('${r.id}')" class="px-3 py-1 rounded text-xs font-medium text-white ${aval.ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-amber-500 hover:bg-amber-600'} transition">
+                            ${aval.ativo ? 'Remover' : 'Incluir'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Atualizar Probabilidade ou Severidade
+        function updateRisk(id, field, val) {
+            if (!avaliacoes[id]) {
+                avaliacoes[id] = { prob: 1, sev: 1, ativo: false };
+            }
+            avaliacoes[id][field] = parseInt(val);
+            filterRisks();
+            updateSummary();
+        }
+
+        // Alternar inclusão do risco
+        function toggleRisk(id) {
+            if (!avaliacoes[id]) {
+                avaliacoes[id] = { prob: 1, sev: 1, ativo: true };
+            } else {
+                avaliacoes[id].ativo = !avaliacoes[id].ativo;
+            }
+            filterRisks();
+            updateSummary();
+        }
+
+        // Determinar cor do Badge
+        function getNivelBadge(score) {
+            if (score <= 5) return "badge-success";
+            if (score <= 12) return "badge-warning";
+            return "badge-danger";
+        }
+
+        // Determinar texto do Nível
+        function getNivelTexto(score) {
+            if (score <= 5) return "Baixo";
+            if (score <= 12) return "Médio";
+            return "Alto";
+        }
+
+        // Filtrar Riscos por Categoria
+        function filterRisks() {
+            const cat = document.getElementById("filterCategory").value;
+            const filtrados = cat === "todos" ? baseDeRiscos : baseDeRiscos.filter(r => r.cat === cat);
+            renderTable(filtrados);
+        }
+
+        // Atualizar Resumo
+        function updateSummary() {
+            const summaryDiv = document.getElementById("selectedRisksSummary");
+            summaryDiv.innerHTML = "";
+
+            const selecionados = baseDeRiscos.filter(r => avaliacoes[r.id] && avaliacoes[r.id].ativo);
+
+            if (selecionados.length === 0) {
+                summaryDiv.innerHTML = '<p class="text-slate-400 text-sm col-span-full italic">Nenhum risco avaliado até ao momento.</p>';
+                return;
+            }
+
+            selecionados.forEach(r => {
+                const aval = avaliacoes[r.id];
+                const score = aval.prob * aval.sev;
+                const badgeClass = getNivelBadge(score);
+
+                const card = document.createElement("div");
+                card.className = "risk-card bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">${r.cat}</span>
+                        <h3 class="font-medium text-slate-800 text-sm mt-1">${r.agente}</h3>
+                    </div>
+                    <div class="mt-3 flex justify-between items-center">
+                        <span class="text-xs text-slate-500">P:${aval.prob} | S:${aval.sev}</span>
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded ${badgeClass}">${getNivelTexto(score)} (${score})</span>
+                    </div>
+                `;
+                summaryDiv.appendChild(card);
+            });
+        }
+
+        // Exportação simplificada para Excel
+        function exportToExcel() {
+            const empresa = document.getElementById("empresa").value || "Não informada";
+            const setor = document.getElementById("setor").value || "Não informado";
+            
+            let data = [
+                ["Relatório de Avaliação de Riscos Ocupacionais"],
+                ["Empresa:", empresa],
+                ["Setor:", setor],
+                [],
+                ["Categoria", "Agente / Perigo", "Probabilidade", "Severidade", "Nível de Risco"]
+            ];
+
+            baseDeRiscos.forEach(r => {
+                const aval = avaliacoes[r.id];
+                if (aval && aval.ativo) {
+                    const score = aval.prob * aval.sev;
+                    data.push([r.cat, r.agente, aval.prob, aval.sev, `${score} - ${getNivelTexto(score)}`]);
+                }
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Riscos");
+            XLSX.writeFile(wb, `Avaliacao_Riscos_${empresa.replace(/\s+/g, '_')}.xlsx`);
+        }
+
+        // Exportação simplificada para PDF
+        function exportToPDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
