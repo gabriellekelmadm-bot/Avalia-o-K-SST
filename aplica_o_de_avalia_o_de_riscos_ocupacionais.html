@@ -18,14 +18,10 @@
         body { display: none; }
         .risk-card { transition: all 0.2s ease-in-out; }
         .risk-card:hover { transform: translateY(-2px); }
-        .badge-danger { background-color: #fee2e2; color: #991b1b; }
-        .badge-warning { background-color: #fef3c7; color: #92400e; }
-        .badge-success { background-color: #d1fae5; color: #065f46; }
-        .badge-info { background-color: #e0f2fe; color: #075985; }
     </style>
 
     <script>
-        // Altere a senha sst123 abaixo se quiser outra
+        // Senha de acesso
         const SENHA_CORRETA = "sst123"; 
         let senhaDigitada = prompt("Digite a senha para acessar a Matriz de SST:");
 
@@ -40,6 +36,79 @@
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen pb-12">
-    <!-- O restante do código do seu aplicativo (HTML e scripts das funções) continua aqui abaixo -->
+
+    <!-- CABEÇALHO -->
+    <header class="bg-blue-600 text-white p-6 shadow-md mb-6">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-bold"><i class="fas fa-shield-alt mr-2"></i>Avaliação de Riscos Ocupacionais K-SST</h1>
+            <span class="bg-blue-700 px-3 py-1 rounded text-sm">Versão 1.0</span>
+        </div>
+    </header>
+
+    <!-- FORMULÁRIO DE SST -->
+    <main class="max-w-4xl mx-auto px-4">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-plus-circle text-blue-600 mr-2"></i>Nova Identificação de Risco</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Setor / Local</label>
+                    <input type="text" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500" placeholder="Ex: Produção, Almoxarifado">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria do Risco</label>
+                    <select class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500">
+                        <option>Físico</option>
+                        <option>Químico</option>
+                        <option>Biológico</option>
+                        <option>Ergonômico</option>
+                        <option>Acidente / Mecânico</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição do Perigo / Fator de Risco</label>
+                <textarea class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Descreva a situação encontrada..."></textarea>
+            </div>
+
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition w-full md:w-auto">
+                <i class="fas fa-save mr-2"></i>Adicionar à Matriz
+            </button>
+        </div>
+
+        <!-- REPOSITÓRIO DA TABELA -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+                <h2 class="text-lg font-semibold text-gray-800"><i class="fas fa-list text-blue-600 mr-2"></i>Matriz de Riscos Registrados</h2>
+                <div class="flex gap-2">
+                    <button class="bg-green-600 hover:bg-green-700 text-white text-sm py-1.5 px-3 rounded"><i class="fas fa-file-excel mr-1"></i>Excel</button>
+                    <button class="bg-red-600 hover:bg-red-700 text-white text-sm py-1.5 px-3 rounded"><i class="fas fa-file-pdf mr-1"></i>PDF</button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 text-sm font-semibold border-b border-gray-200">
+                            <th class="p-3">Setor</th>
+                            <th class="p-3">Grupo</th>
+                            <th class="p-3">Perigo / Risco</th>
+                            <th class="p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-gray-600">
+                        <tr class="border-b border-gray-100">
+                            <td class="p-3 font-medium text-gray-900">Exemplo de Setor</td>
+                            <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-medium">Ergonômico</span></td>
+                            <td class="p-3">Postura inadequada prolongada em bancada.</td>
+                            <td class="p-3"><button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
 </body>
 </html>
